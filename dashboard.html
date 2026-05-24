@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>لوحة تحكم الصالون — إدارة الحجوزات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --black: #0a0a0a;
+    --dark: #111111;
+    --card: #181818;
+    --border: #2a2a2a;
+    --text: #f0ece4;
+    --muted: #888;
+    --error: #e05252;
+    --error-dim: rgba(224, 82, 82, 0.15);
+    --success: #5caa7a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  .title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  label {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  input, select {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    outline: none;
+    font-family: 'Tajawal', sans-serif;
+    min-width: 200px;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--gold);
+  }
+
+  .btn-danger-all {
+    padding: 0.75rem 1.5rem;
+    background: var(--error-dim);
+    border: 1px solid var(--error);
+    color: var(--error);
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Tajawal', sans-serif;
+    margin-right: auto; /* لدفع الزر إلى أقصى اليسار بالشاشات الكبيرة */
+  }
+
+  .btn-danger-all:hover {
+    background: var(--error);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(224, 82, 82, 0.3);
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1rem;
+  }
+
+  .booking-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .booking-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    transform: translateY(-2px);
+  }
+
+  .time-badge {
+    position: absolute;
+    top: 1.2rem;
+    left: 1.2rem;
+    background: rgba(201,168,76,0.15);
+    color: var(--gold-light);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    direction: ltr;
+  }
+
+  .barber-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .status-text {
+    font-size: 0.9rem;
+    color: var(--success);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-delete {
+    width: 100%;
+    padding: 0.7rem;
+    background: transparent;
+    border: 1px solid var(--error);
+    color: var(--error);
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .btn-delete:hover {
+    background: var(--error);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(224, 82, 82, 0.2);
+  }
+
+  .no-bookings {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+  }
+
+  .loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: var(--gold);
+  }
+
+  @media (max-width: 640px) {
+    .controls-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .btn-danger-all {
+      margin-right: 0;
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1 class="title">لوحة تحكم الصالون 💈</h1>
+    <p class="subtitle">إدارة المواعيد المباشرة وإلغاء الحجوزات</p>
+  </header>
+
+  <div class="controls-row">
+    <div class="control-group">
+      <label>اختر التاريخ المراد عرضه:</label>
+      <input type="date" id="dateFilter" />
+    </div>
+    <div class="control-group">
+      <label>تصفية حسب الحلاق:</label>
+      <select id="barberFilter">
+        <option value="all">كل الحلاقين</option>
+        <option value="1">اسامه صوافطه</option>
+        <option value="2">جميل صوافطه</option>
+      </select>
+    </div>
+    
+    <button class="btn-danger-all" id="clearAllDayBtn" onclick="cancelAllBookingsForDay()">إلغاء جميع حجوزات هذا اليوم ⚠️</button>
+  </div>
+
+  <div class="dashboard-grid" id="dashboardGrid">
+    <div class="loading">جاري تحميل الحجوزات...</div>
+  </div>
+</div>
+
+<script>
+const FB_URL = 'https://osama-barber-default-rtdb.firebaseio.com/bookings';
+
+const BARBERS = {
+  1: 'اسامه صوافطه',
+  2: 'جميل صوافطه'
+};
+
+const TIME_LABELS = {
+  '09:00': '9:00 ص', '09:30': '9:30 ص', '10:00': '10:00 ص', '10:30': '10:30 ص',
+  '11:00': '11:00 ص', '11:30': '11:30 ص', '12:00': '12:00 م', '12:30': '12:30 م',
+  '01:00': '1:00 م',  '01:30': '1:30 م',  '02:00': '2:00 م',  '02:30': '2:30 م',
+  '03:00': '3:00 م',  '03:30': '3:30 م',  '04:00': '4:00 م',  '04:30': '4:30 م',
+  '05:00': '5:00 م',  '05:30': '5:30 م',  '06:00': '6:00 م',  '06:30': '6:30 م',
+  '07:00': '7:00 م'
+};
+
+let allBookings = {};
+
+const localNow = new Date();
+const yyyy = localNow.getFullYear();
+const mm = String(localNow.getMonth() + 1).padStart(2, '0');
+const dd = String(localNow.getDate()).padStart(2, '0');
+document.getElementById('dateFilter').value = `${yyyy}-${mm}-${dd}`;
+
+async function loadBookings() {
+  try {
+    const res = await fetch(`${FB_URL}.json`);
+    allBookings = await res.json() || {};
+    renderDashboard();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('dashboardGrid').innerHTML = '<div class="no-bookings" style="color:var(--error)">حدث خطأ أثناء الاتصال بقاعدة البيانات.</div>';
+  }
+}
+
+function renderDashboard() {
+  const grid = document.getElementById('dashboardGrid');
+  const targetDate = document.getElementById('dateFilter').value;
+  const targetBarber = document.getElementById('barberFilter').value;
+
+  if (!targetDate) {
+    grid.innerHTML = '<div class="no-bookings">الرجاء اختيار تاريخ لعرض الحجوزات</div>';
+    return;
+  }
+
+  let html = '';
+  let count = 0;
+
+  for (const key in allBookings) {
+    if (key.startsWith(targetDate)) {
+      const barberId = key.split('_')[1];
+      if (targetBarber !== 'all' && targetBarber !== barberId) continue;
+
+      const bookedTimes = allBookings[key] || [];
+
+      bookedTimes.forEach(time => {
+        count++;
+        html += `
+          <div class="booking-card">
+            <div class="time-badge">${TIME_LABELS[time] || time}</div>
+            <div class="barber-name">💈 الكرسي: ${BARBERS[barberId] || 'حلاق ' + barberId}</div>
+            <div class="status-text">🟢 ممتلئ (محجوز للزبائن)</div>
+            <button class="btn-delete" onclick="cancelBooking('${key}', '${time}')">إلغاء الموعد وفتحه للزبائن</button>
+          </div>
+        `;
+      });
+    }
+  }
+
+  if (count === 0) {
+    grid.innerHTML = `<div class="no-bookings">لا يوجد أي حجوزات محددة لهذا اليوم (${targetDate}) حتى الآن.</div>`;
+    document.getElementById('clearAllDayBtn').style.display = 'none'; // إخفاء الزر إذا لم يكن هناك حجوزات
+  } else {
+    grid.innerHTML = html;
+    document.getElementById('clearAllDayBtn').style.display = 'block'; // إظهار الزر عند وجود حجوزات
+  }
+}
+
+async function cancelBooking(key, time) {
+  if (!confirm(`هل أنت متأكد من إلغاء موعد الساعة ${TIME_LABELS[time] || time}؟ سيظهر الموعد فوراً كـ "متاح" للزبائن في الموقع الأول.`)) return;
+
+  let currentTimes = allBookings[key] || [];
+  const updatedTimes = currentTimes.filter(t => t !== time);
+
+  try {
+    const res = await fetch(`${FB_URL}/${key}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedTimes)
+    });
+
+    if (res.ok) {
+      alert('تم إلغاء الموعد وفتحه للزبائن بنجاح! 🎉');
+      await loadBookings();
+    } else {
+      alert('حدث خطأ أثناء إلغاء الحجز، يرجى المحاولة لاحقاً.');
+    }
+  } catch (e) {
+    alert('مشكلة في الشبكة، لم يتم إلغاء الحجز.');
+    console.error(e);
+  }
+}
+
+// دالة إلغاء وحذف كافة حجوزات اليوم المحدد بالكامل
+async function cancelAllBookingsForDay() {
+  const targetDate = document.getElementById('dateFilter').value;
+  if (!targetDate) return;
+
+  // تأكيد أول
+  if (!confirm(`⚠️ تحذير: أنت على وشك إلغاء جميع الحجوزات المسجلة ليوم (${targetDate}). هل تريد الاستمرار؟`)) return;
+  // تأكيد نهائي للأمان
+  if (!confirm(`هل أنت متأكد تماماً؟ هذا الإجراء سيقوم بفتح كل الساعات المأخوذة للزبائن دفعة واحدة في الموقع وبشكل فوري!`)) return;
+
+  const btn = document.getElementById('clearAllDayBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري المسح والإلغاء...';
+
+  try {
+    // نمر على كافة مفاتيح الحلاقين المرتبطة بهذا التاريخ ونحذفها من الفايربيس
+    for (const key in allBookings) {
+      if (key.startsWith(targetDate)) {
+        await fetch(`${FB_URL}/${key}.json`, {
+          method: 'DELETE'
+        });
+      }
+    }
+    
+    alert('تم إلغاء كافة حجوزات هذا اليوم بنجاح وفتح جميع المواعيد للزبائن! 🎉');
+    await loadBookings();
+  } catch (e) {
+    alert('حدث خطأ أثناء محاولة مسح الحجوزات.');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'إلغاء جميع حجوزات هذا اليوم ⚠️';
+  }
+}
+
+document.getElementById('dateFilter').addEventListener('change', () => {
+  document.getElementById('dashboardGrid').innerHTML = '<div class="loading">جاري تحميل الحجوزات...</div>';
+  loadBookings();
+});
+document.getElementById('barberFilter').addEventListener('change', renderDashboard);
+
+loadBookings();
+setInterval(loadBookings, 4000); // تحديث دوري ملقائي كل 4 ثوانٍ
+</script>
+</body>
+</html>
